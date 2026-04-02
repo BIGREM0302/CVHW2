@@ -316,8 +316,10 @@ def main():
                                           batch_size=cfg.batch_size, split='test')
         
         print("Loading pretrained ResNet18 for Pseudo-labeling...")
-        teacher = ResNet18().to(device)
-        teacher.load_state_dict(torch.load('checkpoint/resnet18_best.pth'))
+        #teacher = ResNet18().to(device)
+        teacher = MyNet().to(device)
+        #teacher.load_state_dict(torch.load('checkpoint/resnet18_best.pth'))
+        teacher.load_state_dict(torch.load('checkpoint/mynet_best.pth'))
         
         # 產生 Pseudo-dataset
         pseudo_dataset = generate_pseudo_labels(teacher, unlabeled_loader, device, threshold=0.95)
