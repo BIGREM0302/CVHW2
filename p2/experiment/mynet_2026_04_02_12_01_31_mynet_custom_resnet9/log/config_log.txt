@@ -1,0 +1,8 @@
+Experiment Name = mynet_custom_resnet9
+Model Type      = mynet
+Num epochs      = 100
+Batch size      = 128
+Use adam        = True
+Learning rate   = 0.0003
+Scheduler step  = [50, 75, 90]
+use semi

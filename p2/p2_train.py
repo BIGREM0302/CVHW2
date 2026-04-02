@@ -20,6 +20,57 @@ from model import MyNet, ResNet18
 from dataset import get_dataloader
 from utils import set_seed, write_config_log, write_result_log
 
+import torch.nn.functional as F
+from torch.utils.data import TensorDataset, ConcatDataset, DataLoader
+
+class PseudoDataset(torch.utils.data.Dataset):
+    def __init__(self, images, labels):
+        self.images = images
+        self.labels = labels
+    def __len__(self):
+        return len(self.images)
+    def __getitem__(self, idx):
+        # 確保回傳格式跟 CIFAR10Dataset 一模一樣 (dict)
+        return {
+            'images': self.images[idx],
+            'labels': self.labels[idx]
+        }
+
+def generate_pseudo_labels(teacher_model, unlabeled_loader, device, threshold=0.95):
+    """
+    使用訓練好的 teacher_model 為無標籤資料產生 Pseudo-labels。
+    只保留信心水準大於 threshold 的預測結果。
+    """
+    teacher_model.eval()
+    pseudo_images = []
+    pseudo_labels = []
+    
+    print("Generating pseudo-labels...")
+    with torch.no_grad():
+        for data in unlabeled_loader:
+            images = data['images'].to(device)
+            logits = teacher_model(images)
+            
+            # 將 logits 轉成機率
+            probs = F.softmax(logits, dim=1)
+            max_probs, preds = torch.max(probs, dim=1)
+            
+            # 找出信心水準大於門檻的資料
+            mask = max_probs > threshold
+            if mask.sum() > 0:
+                pseudo_images.append(images[mask].cpu())
+                pseudo_labels.append(preds[mask].cpu())
+                
+    if len(pseudo_images) == 0:
+        print("No confident pseudo-labels generated.")
+        return None
+        
+    pseudo_images = torch.cat(pseudo_images, dim=0)
+    pseudo_labels = torch.cat(pseudo_labels, dim=0)
+    print(f"Generated {len(pseudo_labels)} high-confidence pseudo-labels.")
+    
+    # 修改這裡：使用自定義類別
+    return PseudoDataset(pseudo_images, pseudo_labels)
 
 def plot_learning_curve(
         logfile_dir: str,
@@ -251,10 +302,40 @@ def main():
 
     ##### DATALOADER #####
     ##### TODO: check dataset.py #####
-    train_loader = get_dataloader(os.path.join(dataset_dir, 'train'),
-                                  batch_size=cfg.batch_size, split='train')
-    val_loader   = get_dataloader(os.path.join(dataset_dir, 'val'),
-                                  batch_size=cfg.batch_size, split='val')
+    original_train_loader = get_dataloader(os.path.join(dataset_dir, 'train'),
+                                           batch_size=cfg.batch_size, split='train')
+    # 從 loader 中取出 dataset 物件
+    train_dataset = original_train_loader.dataset
+    
+    val_loader = get_dataloader(os.path.join(dataset_dir, 'val'),
+                                batch_size=cfg.batch_size, split='val')
+
+    ##### Semi-Supervised Learning 邏輯 #####
+    if cfg.use_pseudo_labeling:
+        unlabeled_loader = get_dataloader(os.path.join(dataset_dir, 'unlabel'), 
+                                          batch_size=cfg.batch_size, split='test')
+        
+        print("Loading pretrained ResNet18 for Pseudo-labeling...")
+        teacher = ResNet18().to(device)
+        teacher.load_state_dict(torch.load('checkpoint/resnet18_best.pth'))
+        
+        # 產生 Pseudo-dataset
+        pseudo_dataset = generate_pseudo_labels(teacher, unlabeled_loader, device, threshold=0.95)
+        
+        if pseudo_dataset is not None:
+            print("Merging original train set with pseudo-labeled data...")
+            combined_dataset = ConcatDataset([train_dataset, pseudo_dataset])
+            # 重新定義 train_loader
+            train_loader = DataLoader(combined_dataset, 
+                                      batch_size=cfg.batch_size, 
+                                      shuffle=True, 
+                                      num_workers=2, # 建議開一點 worker 加速
+                                      pin_memory=True,
+                                      drop_last=True)
+        else:
+            train_loader = original_train_loader
+    else:
+        train_loader = original_train_loader
 
     ##### LOSS & OPTIMIZER #####
     criterion = nn.CrossEntropyLoss()

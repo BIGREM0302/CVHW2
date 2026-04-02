@@ -14,21 +14,71 @@ class MyNet(nn.Module):
         super(MyNet, self).__init__()
         
         ################################################################
-        # TODO:                                                        #
-        # Define your CNN model architecture. Note that the first      #
-        # input channel is 3, and the output dimension is 10 (class).  #
+        # TODO: Define your CNN model architecture.
         ################################################################
+        
+        # 定義一個好用的卷積區塊 (Conv -> BatchNorm -> ReLU -> [MaxPool])
+        def conv_block(in_channels, out_channels, pool=False):
+            layers = [
+                nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1, bias=False),
+                nn.BatchNorm2d(out_channels),
+                nn.ReLU(inplace=True)
+            ]
+            if pool:
+                layers.append(nn.MaxPool2d(2))
+            return nn.Sequential(*layers)
 
-        pass
+        # Input: 3 x 32 x 32
+        self.prep = conv_block(3, 64) # 輸出: 64 x 32 x 32
+        
+        # Layer 1
+        self.layer1 = conv_block(64, 128, pool=True) # 輸出: 128 x 16 x 16
+        self.res1 = nn.Sequential(
+            conv_block(128, 128),
+            conv_block(128, 128)
+        )
+        
+        # Layer 2
+        self.layer2 = conv_block(128, 256, pool=True) # 輸出: 256 x 8 x 8
+        
+        # Layer 3
+        self.layer3 = conv_block(256, 512, pool=True) # 輸出: 512 x 4 x 4
+        self.res2 = nn.Sequential(
+            conv_block(512, 512),
+            conv_block(512, 512)
+        )
+        
+        # Classifier
+        self.classifier = nn.Sequential(
+            nn.AdaptiveMaxPool2d(1), # 全域池化，輸出: 512 x 1 x 1
+            nn.Flatten(),
+            nn.Dropout(0.3),         # 加入 Dropout 避免過擬合
+            nn.Linear(512, 10)       # 分類到 10 個類別
+        )
 
     def forward(self, x):
 
         ##########################################
-        # TODO:                                  #
-        # Define the forward path of your model. #
+        # TODO: Define the forward path of your model.
         ##########################################
-
-        pass
+        
+        # 準備層
+        out = self.prep(x)
+        
+        # Block 1 (包含 Residual Connection)
+        out = self.layer1(out)
+        out = self.res1(out) + out 
+        
+        # Block 2
+        out = self.layer2(out)
+        
+        # Block 3 (包含 Residual Connection)
+        out = self.layer3(out)
+        out = self.res2(out) + out
+        
+        # 分類器
+        out = self.classifier(out)
+        return out
     
 class ResNet18(nn.Module):
     def __init__(self):

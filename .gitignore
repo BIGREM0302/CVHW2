@@ -1,0 +1,21 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# distribution
+build/
+dist/
+*.egg-info/
+
+# virtual env
+venv/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
