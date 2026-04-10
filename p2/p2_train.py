@@ -74,63 +74,54 @@ def generate_pseudo_labels(teacher_model, unlabeled_loader, device, threshold=0.
 
 def plot_learning_curve(
         logfile_dir: str,
-        result_lists: list
+        result_lists: dict
     ):
-    '''
-    Plot and save the learning curves under logfile_dir.
-    - Args:
-         - logfile_dir: str, the directory to save the learning curves.
-         - result_lists: dict, the dictionary contains the training and
-                         validation results with keys
-                         'train_acc', 'train_loss', 'val_acc', 'val_loss'.
-     - Returns:
-         - None
-    '''
-    ################################################################
-    # TODO:                                                        #
-    # Plot and save the learning curves under logfile_dir, you can #
-    # use plt.plot() and plt.savefig().                            #
-    #                                                              #
-    # NOTE:                                                        #
-    # You have to attach four plots of your best model in your     #
-    # report, which are:                                           #
-    #   1. training accuracy                                       #
-    #   2. training loss                                           #
-    #   3. validation accuracy                                     #
-    #   4. validation loss                                         #
-    #                                                              #
-    # NOTE:                                                        #
-    # This function is called at end of each epoch to avoid the    #
-    # plot being unsaved if early stop, so the result_lists's size #
-    # is not fixed.                                                #
-    ################################################################
+
     epochs = range(1, len(result_lists['train_acc']) + 1)
-    plt.figure(figsize=(12, 5))
-    
-    # 畫 Accuracy
-    plt.subplot(1, 2, 1)
+
+    # 1️⃣ Training Accuracy
+    plt.figure()
     plt.plot(epochs, result_lists['train_acc'], label='Train Acc')
-    plt.plot(epochs, result_lists['val_acc'], label='Val Acc')
-    plt.title('Accuracy Curve')
+    plt.title('Training Accuracy')
     plt.xlabel('Epoch')
     plt.ylabel('Accuracy')
     plt.legend()
     plt.grid(True)
-    
-    # 畫 Loss
-    plt.subplot(1, 2, 2)
+    plt.savefig(os.path.join(logfile_dir, 'train_acc.png'))
+    plt.close()
+
+    # 2️⃣ Validation Accuracy
+    plt.figure()
+    plt.plot(epochs, result_lists['val_acc'], label='Val Acc')
+    plt.title('Validation Accuracy')
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(os.path.join(logfile_dir, 'val_acc.png'))
+    plt.close()
+
+    # 3️⃣ Training Loss
+    plt.figure()
     plt.plot(epochs, result_lists['train_loss'], label='Train Loss')
-    plt.plot(epochs, result_lists['val_loss'], label='Val Loss')
-    plt.title('Loss Curve')
+    plt.title('Training Loss')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
     plt.legend()
     plt.grid(True)
-    
-    plt.tight_layout()
-    plt.savefig(os.path.join(logfile_dir, 'learning_curve.png'))
+    plt.savefig(os.path.join(logfile_dir, 'train_loss.png'))
     plt.close()
-    pass
+
+    # 4️⃣ Validation Loss
+    plt.figure()
+    plt.plot(epochs, result_lists['val_loss'], label='Val Loss')
+    plt.title('Validation Loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(os.path.join(logfile_dir, 'val_loss.png'))
+    plt.close()
 
 def train(
         model: nn.Module,
