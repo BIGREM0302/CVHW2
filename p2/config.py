@@ -15,8 +15,8 @@
 exp_name = 'semi'  # name of experiment
 #exp_name = 'mynet_custom_resnet9'
 # Model Options
-model_type = 'resnet18'  # 'mynet' or 'resnet18'
-#model_type = 'mynet'
+#model_type = 'resnet18'  # 'mynet' or 'resnet18'
+model_type = 'mynet'
 
 # Learning Options
 epochs = 100                # train how many epochs 50->100
