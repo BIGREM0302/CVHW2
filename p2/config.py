@@ -15,8 +15,8 @@
 exp_name = 'semi'  # name of experiment
 #exp_name = 'mynet_custom_resnet9'
 # Model Options
-#model_type = 'resnet18'  # 'mynet' or 'resnet18'
-model_type = 'mynet'
+model_type = 'resnet18'  # 'mynet' or 'resnet18'
+#model_type = 'mynet'
 
 # Learning Options
 epochs = 100                # train how many epochs 50->100
@@ -26,4 +26,5 @@ use_pseudo_labeling = True
 lr = 1e-1                  # learning rate 0.01->0.1
 #lr = 3e-4 # avoid gradient explode
 #milestones = [16, 32, 45]  # reduce learning rate at 'milestones' epochs
-milestones = [50, 75, 90]  # reduce learning raet at 'milesontes' epochs
+#milestones = [50, 75, 90]  # reduce learning raet at 'milesontes' epochs
+milestones = [65, 85]

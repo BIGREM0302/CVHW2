@@ -109,7 +109,7 @@ class ModernBlock(nn.Module):
             return self.conv(x)
 
 class MyNet(nn.Module):
-    def __init__(self, num_classes=10):
+    def __init__(self, num_classes=10, expand_ratio=10):
         super(MyNet, self).__init__()
         
         # Stem (準備層) - Input: 3 x 32 x 32
@@ -124,17 +124,17 @@ class MyNet(nn.Module):
             # in_channels, out_channels, stride, expand_ratio
             ModernBlock(32, 32, stride=1, expand_ratio=1),      # 輸出: 32 x 32 x 32
             
-            ModernBlock(32, 64, stride=2, expand_ratio=4),      # 輸出: 64 x 16 x 16 (Downsample)
-            ModernBlock(64, 64, stride=1, expand_ratio=4),
+            ModernBlock(32, 64, stride=2, expand_ratio=expand_ratio),      # 輸出: 64 x 16 x 16 (Downsample)
+            ModernBlock(64, 64, stride=1, expand_ratio=expand_ratio),
             
-            ModernBlock(64, 128, stride=2, expand_ratio=4),     # 輸出: 128 x 8 x 8 (Downsample)
-            ModernBlock(128, 128, stride=1, expand_ratio=4),
+            ModernBlock(64, 128, stride=2, expand_ratio=expand_ratio),     # 輸出: 128 x 8 x 8 (Downsample)
+            ModernBlock(128, 128, stride=1, expand_ratio=expand_ratio),
             
-            ModernBlock(128, 256, stride=2, expand_ratio=4),    # 輸出: 256 x 4 x 4 (Downsample)
-            ModernBlock(256, 256, stride=1, expand_ratio=4)
+            ModernBlock(128, 256, stride=2, expand_ratio=expand_ratio),    # 輸出: 256 x 4 x 4 (Downsample)
+            ModernBlock(256, 256, stride=1, expand_ratio=expand_ratio)
         )
         
-        #self.sppf = SPPF(256, 256, kernel_size=5)
+        self.sppf = SPPF(256, 256, kernel_size=5)
         # 分類器
         self.classifier = nn.Sequential(
             nn.AdaptiveAvgPool2d(1), # 全域平均池化 (現代架構多用 Avg 而非 Max)
