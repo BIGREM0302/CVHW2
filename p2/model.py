@@ -8,6 +8,7 @@
 import torch
 import torch.nn as nn
 import torchvision.models as models
+import torch.nn.functional as F
 
 class SPPF(nn.Module):
     # 靈感來自 YOLOv5 的 Spatial Pyramid Pooling - Fast
