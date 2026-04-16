@@ -1,0 +1,7 @@
+Experiment Name = semi
+Model Type      = mynet
+Num epochs      = 100
+Batch size      = 128
+Use adam        = False
+Learning rate   = 0.1
+Scheduler step  = [50, 75, 90]
