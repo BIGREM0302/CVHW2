@@ -46,7 +46,7 @@ def main():
     if model_type == 'mynet':
         model = MyNet()
         model.load_state_dict(torch.load('./checkpoint/mynet_best.pth', 
-                                         map_location=torch.device('cpu')))
+                                         map_location=torch.device('cpu')), strict=False)
     elif model_type == 'resnet18':
         model = ResNet18()
         model.load_state_dict(torch.load('./checkpoint/resnet18_best.pth', 
